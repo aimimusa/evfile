@@ -115,8 +115,6 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'evca-uploads', // A folder name in your Cloudinary account
-        // ** THE FIX IS HERE **
-        // This function checks the file type and tells Cloudinary how to handle it.
         resource_type: (req, file) => {
             if (file.mimetype.startsWith('image')) return 'image';
             if (file.mimetype.startsWith('video')) return 'video';
@@ -192,14 +190,21 @@ app.delete('/files/:id', isAuthenticated, async (req, res) => {
     try {
         const file = await File.findById(req.params.id);
         if (file) {
-            // Delete from Cloudinary using the stored public_id
-            await cloudinary.uploader.destroy(file.filename);
-            // Delete from the database
+            let resourceType = 'image';
+            if (file.mimeType && !file.mimeType.startsWith('image') && !file.mimeType.startsWith('video')) {
+                resourceType = 'raw';
+            } else if (file.mimeType && file.mimeType.startsWith('video')) {
+                resourceType = 'video';
+            }
+            
+            await cloudinary.uploader.destroy(file.filename, { resource_type: resourceType });
+
             await File.findByIdAndDelete(req.params.id);
             await logActivity(`Deleted file "${file.displayName}"`, req.session.userId);
         }
         res.json({ message: 'File deleted successfully.' });
     } catch (error) {
+        console.error('Error deleting file:', error);
         res.status(500).json({ message: 'Server error deleting file.' });
     }
 });
@@ -215,15 +220,22 @@ app.get('/files', isAuthenticated, async (req, res) => {
 
 app.get('/view/:filename', isAuthenticated, async (req, res) => {
     try {
-        // The filename in the URL is the public_id from Cloudinary
         const file = await File.findOne({ filename: req.params.filename });
         if (file && file.fileUrl) {
-            // Redirect the user to the Cloudinary URL for viewing
-            res.redirect(file.fileUrl);
+            // ** THE FIX IS HERE **
+            // This adds a flag to the Cloudinary URL that tells the browser
+            // the original filename, ensuring it downloads correctly.
+            const filenameWithoutExt = path.parse(file.originalName).name;
+            const urlParts = file.fileUrl.split('/upload/');
+            const transformation = `fl_attachment:${filenameWithoutExt}`;
+            const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
+            
+            res.redirect(newUrl);
         } else {
             res.status(404).send('File not found.');
         }
     } catch (error) {
+        console.error('Error viewing file:', error);
         res.status(500).send('Server error viewing file.');
     }
 });
