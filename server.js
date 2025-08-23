@@ -28,8 +28,6 @@ cloudinary.config({
 });
 
 // --- Database Connection ---
-// ** THE FIX IS HERE **
-// Added the serverApi option to ensure a modern, secure connection to MongoDB Atlas
 mongoose.connect(MONGO_URI, {
     serverApi: {
         version: '1',
@@ -117,7 +115,13 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'evca-uploads', // A folder name in your Cloudinary account
-        resource_type: 'auto', // Automatically detect the file type
+        // ** THE FIX IS HERE **
+        // This function checks the file type and tells Cloudinary how to handle it.
+        resource_type: (req, file) => {
+            if (file.mimetype.startsWith('image')) return 'image';
+            if (file.mimetype.startsWith('video')) return 'video';
+            return 'raw'; // For PDFs, documents, etc.
+        },
         public_id: (req, file) => {
             // Create a unique filename
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
