@@ -2,7 +2,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const fs = 'fs'; // fs is no longer used for file storage, but kept for compatibility if needed elsewhere.
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -13,15 +12,19 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- IMPORTANT: MongoDB Connection String ---
-const MONGO_URI = 'mongodb+srv://yami:ss36MtrPUa4CXrMd@yami.faf5uso.mongodb.net/?retryWrites=true&w=majority&appName=yami';
+// --- IMPORTANT: Read secrets from environment variables ---
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://yami:ss36MtrPUa4CXrMd@yami.faf5uso.mongodb.net/?retryWrites=true&w=majority&appName=yami';
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dot5vafue';
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '256854399486711';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'Q1YI-Er-1H49hovhuXRAIDQYYb8';
+
 app.use(express.static('public'));
 
 // --- Cloudinary Configuration ---
 cloudinary.config({
-    cloud_name: 'dot5vafue',
-    api_key: '256854399486711',
-    api_secret: 'Q1YI-Er-1H49hovhuXRAIDQYYb8'
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET
 });
 
 // --- Database Connection ---
