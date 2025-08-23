@@ -13,10 +13,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- IMPORTANT: Read secrets from environment variables ---
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://yami:ss36MtrPUa4CXrMd@yami.faf5uso.mongodb.net/?retryWrites=true&w=majority&appName=yami';
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dot5vafue';
-const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '256854399486711';
-const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'Q1YI-Er-1H49hovhuXRAIDQYYb8';
+const MONGO_URI = process.env.MONGO_URI;
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
 app.use(express.static('public'));
 
@@ -28,9 +28,17 @@ cloudinary.config({
 });
 
 // --- Database Connection ---
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB Connected...'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+// ** THE FIX IS HERE **
+// Added the serverApi option to ensure a modern, secure connection to MongoDB Atlas
+mongoose.connect(MONGO_URI, {
+    serverApi: {
+        version: '1',
+        strict: true,
+        deprecationErrors: true,
+    }
+})
+.then(() => console.log('MongoDB Connected...'))
+.catch(err => console.error('MongoDB Connection Error:', err));
 
 // --- Database Schemas ---
 const userSchema = new mongoose.Schema({
