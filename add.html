@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New File</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .file-drop-area {
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        .file-drop-area.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .form-input-container {
+            position: relative;
+        }
+        .form-input-container svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .form-input {
+            padding-left: 2.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="img/EVCA.png" alt="EVCA Logo" class="h-8 w-auto">
+                <div id="user-greeting" class="ml-6 text-gray-700">Hello, User</div>
+            </div>
+            <div id="nav-buttons">
+                </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="p-6 md:p-8">
+                <h1 class="text-2xl font-bold text-gray-900">Add New Document</h1>
+                <p class="mt-2 text-sm text-gray-600">Fill in the details below to upload a new file to the system.</p>
+
+                <form action="/upload" method="POST" enctype="multipart/form-data" class="mt-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="displayName">File Name</label>
+                            <div class="mt-1 form-input-container">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <input class="form-input w-full py-2.5 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="displayName" name="displayName" type="text" placeholder="e.g., Q1 Tax Document" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="category">Category</label>
+                            <div class="mt-1 form-input-container">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                <input class="form-input w-full py-2.5 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="category" name="category" type="text" placeholder="e.g., Tax, Invoice" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="company">Company</label>
+                            <div class="mt-1 form-input-container">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                <input class="form-input w-full py-2.5 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="company" name="company" type="text" placeholder="e.g., Sana Sdn Bhd" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="date">Date</label>
+                            <div class="mt-1 form-input-container">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <input class="form-input w-full py-2.5 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="date-picker" name="date" type="text" placeholder="Select a date..." required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">File</label>
+                        <div id="fileDropArea" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md file-drop-area">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                <div class="flex justify-center text-sm text-gray-600">
+                                    <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Upload a file</span>
+                                        <input id="file" name="file" type="file" class="sr-only" required>
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p id="fileNameDisplay" class="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 text-right">
+                        <button class="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" type="submit">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize flatpickr
+            flatpickr("#date-picker", {
+                altInput: true,
+                altFormat: "F j, Y",
+                dateFormat: "Y-m-d",
+            });
+
+            const fileDropArea = document.getElementById('fileDropArea');
+            const fileInput = document.getElementById('file');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('dragover'), false);
+            });
+
+            fileDropArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                let dt = e.dataTransfer;
+                let files = dt.files;
+                handleFiles(files);
+            }
+            
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileNameDisplay.textContent = files[0].name;
+                } else {
+                     fileNameDisplay.textContent = 'PNG, JPG, PDF up to 10MB';
+                }
+            }
+
+            // --- UI Setup ---
+            const userGreeting = document.getElementById('user-greeting');
+            const navButtons = document.getElementById('nav-buttons');
+            
+            async function setupUI() {
+                try {
+                    const res = await fetch('/api/user');
+                    if(res.ok) {
+                        const user = await res.json();
+                        userGreeting.textContent = `Hello, ${user.username}`;
+                        
+                        let buttons = '<a href="/" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Home</a>';
+                        if(user.role === 'Admin') {
+                            buttons += `<a href="/admin/panel" class="ml-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Admin Panel</a>`;
+                        }
+                        buttons += `<a href="/logout" class="ml-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Logout</a>`;
+                        navButtons.innerHTML = buttons;
+                    } else {
+                        // Fallback for failed fetch
+                         let buttons = '<a href="/" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Home</a>';
+                         buttons += `<a href="/logout" class="ml-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Logout</a>`;
+                         navButtons.innerHTML = buttons;
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                    // Fallback for error
+                    userGreeting.textContent = 'Hello, User';
+                    let buttons = '<a href="/" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Home</a>';
+                    buttons += `<a href="/logout" class="ml-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Logout</a>`;
+                    navButtons.innerHTML = buttons;
+                }
+            }
+
+            setupUI();
+        });
+    </script>
+</body>
+</html>
