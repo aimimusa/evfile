@@ -2,11 +2,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const fs = require('fs');
+const fs = 'fs'; // fs is no longer used for file storage, but kept for compatibility if needed elsewhere.
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcryptjs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +16,14 @@ const PORT = process.env.PORT || 3000;
 // --- IMPORTANT: MongoDB Connection String ---
 const MONGO_URI = 'mongodb+srv://yami:ss36MtrPUa4CXrMd@yami.faf5uso.mongodb.net/?retryWrites=true&w=majority&appName=yami';
 app.use(express.static('public'));
+
+// --- Cloudinary Configuration ---
+cloudinary.config({
+    cloud_name: 'dot5vafue',
+    api_key: '256854399486711',
+    api_secret: 'Q1YI-Er-1H49hovhuXRAIDQYYb8'
+});
+
 // --- Database Connection ---
 mongoose.connect(MONGO_URI)
     .then(() => console.log('MongoDB Connected...'))
@@ -30,7 +40,8 @@ const fileSchema = new mongoose.Schema({
     displayName: String,
     category: String,
     company: String,
-    filename: String,
+    filename: String, // This will now store the Cloudinary public_id
+    fileUrl: String, // This will store the full URL to the file on Cloudinary
     originalName: String,
     mimeType: String,
     size: Number,
@@ -90,17 +101,18 @@ app.get('/admin/users', isAuthenticated, isAdmin, (req, res) => res.sendFile(pat
 app.get('/admin/dashboard', isAuthenticated, isAdmin, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'dashboard.html')));
 app.get('/admin/activity', isAuthenticated, isAdmin, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'activity.html')));
 
-// --- Multer Configuration ---
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-if (!fs.existsSync(path.join(__dirname, 'admin'))) fs.mkdirSync(path.join(__dirname, 'admin'));
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+// --- Multer Configuration for Cloudinary ---
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'evca-uploads', // A folder name in your Cloudinary account
+        resource_type: 'auto', // Automatically detect the file type
+        public_id: (req, file) => {
+            // Create a unique filename
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            return uniqueSuffix + '-' + path.parse(file.originalname).name;
+        },
+    },
 });
 const upload = multer({ storage: storage });
 
@@ -141,12 +153,13 @@ app.get('/api/user', (req, res) => {
 app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.redirect('/?status=fail&message=No file selected');
-        const { displayName, category, company, date } = req.body;
+        const { displayName, category, company } = req.body;
         const newFile = new File({
             displayName: displayName || req.file.originalname,
             category, company,
-            uploadDate: date ? new Date(date) : Date.now(),
-            filename: req.file.filename,
+            uploadDate: Date.now(),
+            filename: req.file.filename, // Cloudinary public_id
+            fileUrl: req.file.path, // Cloudinary secure URL
             originalName: req.file.originalname,
             mimeType: req.file.mimetype,
             size: req.file.size,
@@ -162,10 +175,12 @@ app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => 
 
 app.delete('/files/:id', isAuthenticated, async (req, res) => {
     try {
-        const file = await File.findByIdAndDelete(req.params.id);
+        const file = await File.findById(req.params.id);
         if (file) {
-            const filePath = path.join(__dirname, uploadDir, file.filename);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            // Delete from Cloudinary using the stored public_id
+            await cloudinary.uploader.destroy(file.filename);
+            // Delete from the database
+            await File.findByIdAndDelete(req.params.id);
             await logActivity(`Deleted file "${file.displayName}"`, req.session.userId);
         }
         res.json({ message: 'File deleted successfully.' });
@@ -182,14 +197,22 @@ app.get('/files', isAuthenticated, async (req, res) => {
         res.status(500).json({ message: 'Server error fetching files.' });
     }
 });
+
 app.get('/view/:filename', isAuthenticated, async (req, res) => {
-    const filePath = path.join(__dirname, uploadDir, req.params.filename);
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send('File not found.');
+    try {
+        // The filename in the URL is the public_id from Cloudinary
+        const file = await File.findOne({ filename: req.params.filename });
+        if (file && file.fileUrl) {
+            // Redirect the user to the Cloudinary URL for viewing
+            res.redirect(file.fileUrl);
+        } else {
+            res.status(404).send('File not found.');
+        }
+    } catch (error) {
+        res.status(500).send('Server error viewing file.');
     }
 });
+
 app.get('/api/users', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const users = await User.find({}, '-password');
@@ -253,10 +276,8 @@ app.get('/api/dashboard-stats', isAuthenticated, isAdmin, async (req, res) => {
         const totalStorageResult = await File.aggregate([ { $group: { _id: null, totalSize: { $sum: "$size" } } } ]);
         const totalStorage = totalStorageResult.length > 0 ? totalStorageResult[0].totalSize : 0;
         
-        // Find the most recent log entry instead of the most recent file for activity
         const recentLog = await ActivityLog.findOne().sort({ timestamp: -1 }).populate('user', 'username');
         
-        // ** FIX **: Check if the user for the log still exists before creating the activity string
         let recentActivity = 'No recent activity';
         if (recentLog) {
             const userName = recentLog.user ? recentLog.user.username : 'A deleted user';
