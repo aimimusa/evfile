@@ -225,7 +225,7 @@ const viewableMimeTypes = [
     'image/gif',
     'image/webp',
     'image/svg+xml',
-    'application/pdf',
+    // 'application/pdf', // Temporarily removed to force download with correct name
     'text/plain'
 ];
 
@@ -238,8 +238,7 @@ app.get('/view/:filename', isAuthenticated, async (req, res) => {
                 // For viewable files, just redirect to the plain URL to open in the browser
                 res.redirect(file.fileUrl);
             } else {
-                // ** THE FIX IS HERE **
-                // For other files, force a download with the original name by attaching it to the flag.
+                // For other files (like PDFs), force a download with the original name by attaching it to the flag.
                 const urlParts = file.fileUrl.split('/upload/');
                 const transformation = `fl_attachment:${file.originalName}`;
                 const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
