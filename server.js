@@ -233,15 +233,15 @@ app.get('/view/:filename', isAuthenticated, async (req, res) => {
     try {
         const file = await File.findOne({ filename: req.params.filename });
         if (file && file.fileUrl) {
-            // ** THE FIX IS HERE **
             // Check if the file type is something browsers can display
             if (viewableMimeTypes.includes(file.mimeType)) {
                 // For viewable files, just redirect to the plain URL to open in the browser
                 res.redirect(file.fileUrl);
             } else {
-                // For other files (like .zip, .docx), force a download with the original name
+                // ** THE FIX IS HERE **
+                // For other files, force a download with the original name by attaching it to the flag.
                 const urlParts = file.fileUrl.split('/upload/');
-                const transformation = `fl_attachment`;
+                const transformation = `fl_attachment:${file.originalName}`;
                 const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
                 res.redirect(newUrl);
             }
