@@ -218,18 +218,33 @@ app.get('/files', isAuthenticated, async (req, res) => {
     }
 });
 
+// A list of MIME types that browsers can typically display inline
+const viewableMimeTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'application/pdf',
+    'text/plain'
+];
+
 app.get('/view/:filename', isAuthenticated, async (req, res) => {
     try {
         const file = await File.findOne({ filename: req.params.filename });
         if (file && file.fileUrl) {
             // ** THE FIX IS HERE **
-            // This adds a flag to the Cloudinary URL that tells the browser
-            // the original filename, ensuring it downloads correctly.
-            const urlParts = file.fileUrl.split('/upload/');
-            const transformation = `fl_attachment`;
-            const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
-            
-            res.redirect(newUrl);
+            // Check if the file type is something browsers can display
+            if (viewableMimeTypes.includes(file.mimeType)) {
+                // For viewable files, just redirect to the plain URL to open in the browser
+                res.redirect(file.fileUrl);
+            } else {
+                // For other files (like .zip, .docx), force a download with the original name
+                const urlParts = file.fileUrl.split('/upload/');
+                const transformation = `fl_attachment`;
+                const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
+                res.redirect(newUrl);
+            }
         } else {
             res.status(404).send('File not found.');
         }
