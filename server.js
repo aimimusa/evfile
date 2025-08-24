@@ -225,9 +225,8 @@ app.get('/view/:filename', isAuthenticated, async (req, res) => {
             // ** THE FIX IS HERE **
             // This adds a flag to the Cloudinary URL that tells the browser
             // the original filename, ensuring it downloads correctly.
-            const filenameWithoutExt = path.parse(file.originalName).name;
             const urlParts = file.fileUrl.split('/upload/');
-            const transformation = `fl_attachment:${filenameWithoutExt}`;
+            const transformation = `fl_attachment`;
             const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
             
             res.redirect(newUrl);
