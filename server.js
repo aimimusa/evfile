@@ -121,9 +121,10 @@ const storage = new CloudinaryStorage({
             return 'raw'; // For PDFs, documents, etc.
         },
         public_id: (req, file) => {
-            // Create a unique filename
+            // ** THE FIRST FIX IS HERE **
+            // Keep the original filename and extension for the public_id
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            return uniqueSuffix + '-' + path.parse(file.originalname).name;
+            return `${uniqueSuffix}-${file.originalname}`;
         },
     },
 });
@@ -225,7 +226,7 @@ const viewableMimeTypes = [
     'image/gif',
     'image/webp',
     'image/svg+xml',
-    // 'application/pdf', // Temporarily removed to force download with correct name
+    'application/pdf',
     'text/plain'
 ];
 
@@ -238,9 +239,11 @@ app.get('/view/:filename', isAuthenticated, async (req, res) => {
                 // For viewable files, just redirect to the plain URL to open in the browser
                 res.redirect(file.fileUrl);
             } else {
-                // For other files (like PDFs), force a download with the original name by attaching it to the flag.
+                // ** THE SECOND FIX IS HERE **
+                // For other files, use the simple 'fl_attachment' flag.
+                // This works now because the filename is part of the public_id.
                 const urlParts = file.fileUrl.split('/upload/');
-                const transformation = `fl_attachment:${file.originalName}`;
+                const transformation = `fl_attachment`;
                 const newUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
                 res.redirect(newUrl);
             }
